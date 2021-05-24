@@ -1,4 +1,4 @@
-export USE_HOSTNAME=worker1.concienciadesarrollista.com
+export USE_HOSTNAME=worker2.concienciadesarrollista.com
 echo $USE_HOSTNAME > /etc/hostname
 hostname -F /etc/hostname
 apt-get update -y
