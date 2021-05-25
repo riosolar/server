@@ -3,7 +3,7 @@ version: '3.7'
 services:  
 
   mysql:
-    image: linuxserver/mariadb:alpine
+    image: mariadb
     container_name: wordpress-database
     restart: unless-stopped
     tty: true
