@@ -1,0 +1,83 @@
+version: '3.7'
+
+services:  
+
+  mysql:
+    image: linuxserver/mariadb:alpine
+    container_name: wordpress-database
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3307:3306  
+    environment:
+      PUID: 1000
+      PGID: 1000
+      MYSQL_DATABASE: wordpress
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    volumes:
+      - mysqlv:/var/lib/mysql
+
+  phpmyadmin:
+    image: splattael/phpmyadmin:4.9.7
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - 8081:80
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3307
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: root 
+    depends_on:
+      - mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: root
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - mysql
+    volumes:
+      - wordpressv:/var/www/html
+      
+  filebrowser:
+    image: hurlenko/filebrowser
+    container_name: file-browser
+    user: "${UID}:${GID}"
+    ports:
+      - 4443:8080
+    volumes:
+      - wordpressv:/data
+      - filebconfv:/config
+    environment:
+      - FB_BASEURL=/filebrowser
+    restart: always
+    depends_on:
+      - wordpress   
+
+
+  rainloop:
+    container_name: rainloop
+    restart: unless-stopped
+    image: solidnerd/rainloop:latest
+    ports:
+      - 49165:80
+    volumes:
+      - rainoopdatav:/var/www/rainloop/data
+      - rainlooplogsv:/logs    
+      
+volumes:
+  wordpressv:
+  mysqlv:
+  filebconfv:
+  rainloopdbv:
+  rainoopdatav:
+  rainlooplogsv:
