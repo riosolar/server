@@ -38,6 +38,8 @@ services:
     container_name: wordpress
     ports:
       - 8080:80
+    networks:
+      - nginxproxymanager_default
     environment:
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: root
@@ -62,22 +64,10 @@ services:
     restart: always
     depends_on:
       - wordpress   
-
-
-  rainloop:
-    container_name: rainloop
-    restart: unless-stopped
-    image: solidnerd/rainloop:latest
-    ports:
-      - 49165:80
-    volumes:
-      - rainoopdatav:/var/www/rainloop/data
-      - rainlooplogsv:/logs    
       
 volumes:
   wordpressv:
   mysqlv:
   filebconfv:
-  rainloopdbv:
-  rainoopdatav:
-  rainlooplogsv:
+networks:
+  nginxproxymanager_default:
