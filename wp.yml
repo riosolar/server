@@ -1,0 +1,75 @@
+version: '3'
+
+networks:
+  traefik-public:
+    external: true
+
+volumes:
+  wordpress-data:
+    driver: local
+  dbvolume:
+    driver: local
+
+services:
+
+  wordpress:
+    image: wordpress:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      # Connect WordPrerss to the database
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpressuser
+      WORDPRESS_DB_PASSWORD: changeme
+      WORDPRESS_DB_NAME: wordpressdb
+    volumes:
+      # save the content of WordPress an enable local modifications
+      - wordpress-data:/var/www/html
+    networks:
+      - traefik-public
+      - backend
+    depends_on:
+        - db
+    deploy:
+      placement:
+        constraints:
+          - node.labels.wordpress.wordpress-data == true
+    labels:
+       - traefik.enable=true
+       - traefik.docker.network=traefik-public
+       - traefik.constraint-label=traefik-public
+       - traefik.http.routers.thelounge-http.rule=Host(`${DOMAIN?Variable not set}`)
+       - traefik.http.routers.wordpress-http.entrypoints=http
+       - traefik.http.routers.wordpress-http.middlewares=https-redirect
+       - traefik.http.routers.thelounge-https.rule=Host(`${DOMAIN?Variable not set}`)
+       - traefik.http.routers.wordpress-https.entrypoints=https
+       - traefik.http.routers.wordpress-https.tls=true
+       - traefik.http.routers.wordpress-https.tls.certresolver=le
+       - traefik.http.services.wordpress.loadbalancer.server.port=8080
+
+  db:
+    # this is the database used by Wordpress
+    image: mysql:5.7
+    deploy:
+      restart_policy:
+        condition: on-failure
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      # Connect WordPrerss to the database
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_USER: wordpressuser
+      MYSQL_PASSWORD: changeme
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      # Persist the database on disk
+      - dbvolume:/var/lib/mysql
+    networks:
+      - backend
