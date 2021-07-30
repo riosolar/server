@@ -1,8 +1,7 @@
 #!/bin/bash
 
-apt-get update -y
-apt-get upgrade -y
-apt-get install docker.io docker-compose -y
-dockerswarm init
+export DOMAIN=riocuartonoticias.online
+export NODE_ID=$(docker info -f '{{.Swarm.NodeID}}')
+docker node update --label-add portainer.portainer-data=true $NODE_ID
 
 
